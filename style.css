@@ -202,7 +202,7 @@ body {
 
 .config-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
   gap: 18px; margin-bottom: 14px;
 }
 
@@ -266,6 +266,43 @@ body {
   background: linear-gradient(135deg,rgba(91,184,245,0.35),rgba(62,207,207,0.3));
   color: var(--aero-deep); font-weight: 700;
 }
+
+/* Config derived (calculated automatically) */
+.config-hint-box {
+  background: rgba(91,184,245,0.1);
+  border: 1px solid rgba(91,184,245,0.25);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  margin-bottom: 16px;
+}
+
+.config-derived {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(62,207,207,0.1), rgba(91,184,245,0.1));
+  border: 1px solid rgba(62,207,207,0.25);
+  border-radius: 12px;
+}
+.derived-item {
+  display: flex; align-items: center; gap: 6px;
+}
+.derived-icon { font-size: 1rem; }
+.derived-label {
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--text-light); text-transform: uppercase; letter-spacing: 0.03em;
+}
+.derived-val {
+  font-size: 0.9rem; font-weight: 800;
+  color: var(--aero-deep);
+  font-family: 'Quicksand', sans-serif;
+}
+.derived-sep { color: rgba(91,184,245,0.4); font-size: 1.2rem; }
 
 /* Config summary */
 .config-summary {

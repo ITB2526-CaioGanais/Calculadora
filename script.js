@@ -17,18 +17,23 @@ const MESOS_LLARGS = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','A
 
 // ---- CONFIG GLOBAL (estat reactiu) ----
 const cfg = {
-  alumnes: 350,
-  any: 2025,
-  millora: 0,      // % reducció ja aplicada
-  ini: 8,          // setembre
-  fi: 5,           // juny
-  mode: 'custom',  // 'custom' | 'any'
+  alumnes:  350,
+  millora:  0,
+  objectiu: 30,
+  mesIni:   8,
+  anyIni:   2025,
+  mesFi:    5,
+  anyFi:    2027,
+  mode:     'custom',
+  // derivats (calculats automàticament):
+  anysPla:  3,
+  any:      2025,
 };
 
-// Mesos del període actiu (índexs)
+// Mesos del cicle mensual per a la calculadora ----
 function getMesosPeriode() {
   if (cfg.mode === 'any') return [0,1,2,3,4,5,6,7,8,9,10,11];
-  const ini = cfg.ini, fi = cfg.fi;
+  const ini = cfg.mesIni, fi = cfg.mesFi;
   const mesos = [];
   let m = ini;
   for (let i = 0; i < 12; i++) {
@@ -39,43 +44,187 @@ function getMesosPeriode() {
   return mesos;
 }
 
+// Càlcul de durada del pla en anys ----
+function calcAnysPla() {
+  const ini = cfg.anyIni + cfg.mesIni / 12;
+  const fi  = cfg.anyFi  + cfg.mesFi  / 12;
+  const diff = fi - ini;
+  return Math.max(1, Math.round(diff > 0 ? diff : 1));
+}
+
 // ---- SYNC CONFIG ----
 function syncConfig() {
-  cfg.alumnes = parseInt(document.getElementById('cfg-alumnes').value) || 350;
-  cfg.any     = parseInt(document.getElementById('cfg-any').value)     || 2025;
-  cfg.millora = Math.min(100, Math.max(0, parseFloat(document.getElementById('cfg-millora').value) || 0));
-  cfg.ini     = parseInt(document.getElementById('cfg-ini').value);
-  cfg.fi      = parseInt(document.getElementById('cfg-fi').value);
+  cfg.alumnes  = parseInt(document.getElementById('cfg-alumnes').value)    || 350;
+  cfg.millora  = Math.min(100, Math.max(0, parseFloat(document.getElementById('cfg-millora').value) || 0));
+  cfg.objectiu = Math.min(100, Math.max(1, parseFloat(document.getElementById('cfg-objectiu').value) || 30));
+  cfg.mesIni   = parseInt(document.getElementById('cfg-mes-ini').value);
+  cfg.anyIni   = parseInt(document.getElementById('cfg-any-ini').value) || 2025;
+  cfg.mesFi    = parseInt(document.getElementById('cfg-mes-fi').value);
+  cfg.anyFi    = parseInt(document.getElementById('cfg-any-fi').value)  || 2027;
 
-  // Actualitzar slider i bubble
+  // Validar que any fi >= any ini
+  if (cfg.anyFi < cfg.anyIni || (cfg.anyFi === cfg.anyIni && cfg.mesFi < cfg.mesIni)) {
+    cfg.anyFi = cfg.anyIni + 1;
+    document.getElementById('cfg-any-fi').value = cfg.anyFi;
+  }
+
+  cfg.any     = cfg.anyIni;
+  cfg.anysPla = calcAnysPla();
+
+  // Slider
   document.getElementById('cfg-slider').value = cfg.millora;
   document.getElementById('slider-bubble').textContent = cfg.millora + '%';
 
-  // Actualitzar resum pills
-  document.getElementById('cs-alumnes').textContent = cfg.alumnes;
-  document.getElementById('cs-any').textContent = cfg.any;
-  document.getElementById('cs-millora').textContent = cfg.millora + '%';
-  document.getElementById('millora-pct-display').textContent = cfg.millora + '%';
-
-  // Preview periode
-  const mesos = getMesosPeriode();
+  // Mesos cicle
+  const mesos    = getMesosPeriode();
   const labelIni = NOMS_MESOS[mesos[0]];
   const labelFi  = NOMS_MESOS[mesos[mesos.length - 1]];
-  const numM = mesos.length;
-  const previewText = cfg.mode === 'any'
-    ? 'Any complet (12 mesos)'
-    : `${labelIni} → ${labelFi} (${numM} mes${numM !== 1 ? 'os' : ''})`;
-  document.getElementById('periode-preview').textContent = previewText;
-  document.getElementById('cs-periode').textContent = cfg.mode === 'any'
-    ? 'Any complet'
-    : `${labelIni}–${labelFi} (${numM}m)`;
+  const numM     = mesos.length;
 
-  // Cronograma anys
-  const y = cfg.any;
-  document.getElementById('crono-y1').textContent = y;
-  document.getElementById('crono-y2').textContent = y + 1;
-  document.getElementById('crono-y3').textContent = y + 2;
-  document.getElementById('kpi-any-final').textContent = y + 2;
+  document.getElementById('periode-preview').textContent = cfg.mode === 'any'
+    ? 'Any complet (12 mesos per cicle)'
+    : `${labelIni} → ${labelFi} (${numM} mes${numM !== 1 ? 'os' : ''} per cicle)`;
+
+  // Derivats calculats
+  const anysPlaLabel = cfg.anysPla + ' any' + (cfg.anysPla !== 1 ? 's' : '');
+  const pctPerAny    = (cfg.objectiu / cfg.anysPla).toFixed(1);
+
+  document.getElementById('derived-anys').textContent    = anysPlaLabel;
+  document.getElementById('derived-mesos').textContent   = (cfg.mode === 'any' ? 12 : numM) + ' mesos/cicle';
+  document.getElementById('derived-pct-any').textContent = pctPerAny + '%/any';
+
+  // Pills
+  const periodeText = `${NOMS_MESOS[cfg.mesIni]} ${cfg.anyIni} – ${NOMS_MESOS[cfg.mesFi]} ${cfg.anyFi}`;
+  document.getElementById('cs-alumnes').textContent  = cfg.alumnes;
+  document.getElementById('cs-periode').textContent  = periodeText;
+  document.getElementById('cs-anys-pla').textContent = anysPlaLabel;
+  document.getElementById('cs-millora').textContent  = cfg.millora + '%';
+  document.getElementById('cs-objectiu').textContent = cfg.objectiu + '%';
+
+  // Millora pill
+  const mpd = document.getElementById('millora-pct-display');
+  const mod = document.getElementById('millora-obj-display');
+  const mad = document.getElementById('millora-anys-display');
+  if (mpd) mpd.textContent = cfg.millora + '%';
+  if (mod) mod.textContent = cfg.objectiu + '%';
+  if (mad) mad.textContent = anysPlaLabel;
+
+  // Accions
+  const elAccObj  = document.getElementById('acc-objectiu');
+  const elAccAnys = document.getElementById('acc-anys');
+  if (elAccObj)  elAccObj.textContent  = cfg.objectiu + '%';
+  if (elAccAnys) elAccAnys.textContent = anysPlaLabel;
+
+  // KPIs
+  document.getElementById('kpi-any-final').textContent = cfg.anyFi;
+  document.getElementById('kpi-obj').textContent       = '−' + cfg.objectiu + '%';
+  document.getElementById('kpi-obj-label').textContent = `Impacte total en ${anysPlaLabel}`;
+  document.getElementById('crono-title').textContent   = `Cronograma ${anysPlaLabel}`;
+  document.getElementById('crono-obj-sub').textContent = `−${cfg.objectiu}%`;
+
+  renderTimeline();
+}
+
+
+// ---- RENDER TIMELINE DINÀMICA ----
+function renderTimeline() {
+  const container = document.getElementById('timeline-container');
+  if (!container) return;
+
+  const n    = cfg.anysPla;
+  const obj  = cfg.objectiu;
+  const anyI = cfg.anyIni;
+
+  // Plantilles de contingut per any (cícliques si n > 3)
+  const PLANS = [
+    {
+      icon: '🔍',
+      titol: 'Diagnosi i accions immediates',
+      accions: [
+        'Auditoria energètica completa del centre',
+        'Substitució il·luminació per LED (−15% elec.)',
+        'Instal·lació sensors de presència',
+        'Campanya conscienciació + protocol estalvi d\'aigua',
+        'Digitalització de tràmits interns (−20% paper)',
+      ],
+    },
+    {
+      icon: '⚙️',
+      titol: 'Inversions i optimització',
+      accions: [
+        'Instal·lació plaques fotovoltaiques (−20% elec.)',
+        'Airejadors i reducció de cabal (−15% aigua)',
+        'Substitució productes neteja per ecològics',
+        'Plataforma digital per lliurament de tasques',
+        'Recollida d\'aigua pluvial per a reg',
+      ],
+    },
+    {
+      icon: '✅',
+      titol: 'Consolidació i economia circular',
+      accions: [
+        'Revisió i ajust del pla de millora',
+        'Compra centralitzada i reducció d\'embalatges',
+        'Implementació sistema de gestió ISO 14001',
+        'Reutilització i valorització de residus interns',
+        'Publicació de la memòria de sostenibilitat',
+      ],
+    },
+    {
+      icon: '📈',
+      titol: 'Seguiment i ampliació de millores',
+      accions: [
+        'Anàlisi de resultats i ajust d\'objectius',
+        'Ampliació de la xarxa fotovoltaica',
+        'Certificació ambiental externa del centre',
+        'Programa de formació contínua en sostenibilitat',
+        'Extensió del model a altres centres',
+      ],
+    },
+    {
+      icon: '🌍',
+      titol: 'Lideratge i innovació sostenible',
+      accions: [
+        'Publicació de la memòria de sostenibilitat avançada',
+        'Col·laboració amb altres centres educatius',
+        'Projectes d\'innovació en energia renovable',
+        'Implementació de sistemes d\'emmagatzematge d\'energia',
+        'Integració curricular de la sostenibilitat',
+      ],
+    },
+  ];
+
+  // Calcular objectiu parcial per any (distribuït linealment)
+  const pctPerAny = obj / n;
+
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const pla        = PLANS[i % PLANS.length];
+    const anyNum     = i + 1;
+    const anyAbs     = anyI + i;
+    const pctAcum    = Math.round(pctPerAny * (i + 1));
+    const isLast     = i === n - 1;
+    const badgeClass = isLast ? 'badge-green' : 'badge-blue';
+    const badgeTxt   = isLast
+      ? `Objectiu: −${obj}% global ✓`
+      : `Objectiu: −${pctAcum}% acumulat`;
+
+    html += `
+      <div class="timeline-item glass-card">
+        <div class="timeline-year">Any ${anyNum}<br><small>${anyAbs}</small></div>
+        <div class="timeline-content">
+          <h4>${pla.icon} ${pla.titol}</h4>
+          <ul>
+            ${pla.accions.map(a => `<li>${a}</li>`).join('')}
+          </ul>
+          <div class="timeline-kpi">
+            <span class="badge ${badgeClass}">${badgeTxt}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  container.innerHTML = html;
 }
 
 function syncSlider() {
@@ -95,9 +244,8 @@ function setMode(mode) {
   cfg.mode = mode;
   document.getElementById('tgl-custom').classList.toggle('active', mode === 'custom');
   document.getElementById('tgl-any').classList.toggle('active', mode === 'any');
-  // Disable selectors when full year
-  document.getElementById('cfg-ini').disabled = (mode === 'any');
-  document.getElementById('cfg-fi').disabled  = (mode === 'any');
+  document.getElementById('cfg-mes-ini').disabled = (mode === 'any');
+  document.getElementById('cfg-mes-fi').disabled  = (mode === 'any');
   syncConfig();
 }
 
@@ -269,7 +417,7 @@ function calcularMillora() {
   }
 
   el.innerHTML = `
-    <h4>✅ Resultats amb −${cfg.millora}% de millora aplicada</h4>
+    <h4>✅ Resultats amb −${cfg.millora}% de millora aplicada · Objectiu final: −${cfg.objectiu}% en ${cfg.anysPla} any${cfg.anysPla !== 1 ? 's' : ''}</h4>
     <div class="millora-grid">
       <div class="millora-item">
         <span class="millora-icon">⚡</span>
@@ -406,7 +554,8 @@ function exportarPDF() {
 
   doc.setFontSize(9); doc.setTextColor(...GRIS);
   doc.text(`Informe generat: ${ara.toLocaleDateString('ca-ES',{day:'2-digit',month:'long',year:'numeric'})}`, 18,100);
-  if (cfg.millora > 0) doc.text(`Millora aplicada: ${cfg.millora}%`, 18,107);
+  if (cfg.millora > 0) doc.text(`Millora aplicada: ${cfg.millora}%  ·  Objectiu: −${cfg.objectiu}% en ${cfg.anysPla} any${cfg.anysPla !== 1 ? 's' : ''}`, 18,107);
+  else doc.text(`Objectiu: −${cfg.objectiu}% en ${cfg.anysPla} any${cfg.anysPla !== 1 ? 's' : ''}  (${cfg.any} → ${cfg.any + cfg.anysPla - 1})`, 18, 107);
 
   // Resum indicadors
   const boxY = cfg.millora > 0 ? 114 : 107;
@@ -575,21 +724,31 @@ function exportarExcel() {
   const aig    = parseFloat(document.getElementById('m-aigua').value)  || 0;
   const con    = parseFloat(document.getElementById('m-cons').value)   || 0;
   const net    = parseFloat(document.getElementById('m-neteja').value) || 0;
-  const pct    = cfg.millora / 100;
+  const objPct = cfg.objectiu / 100;
 
   const milloraData = [
-    [`Pla de Reducció · Millora: ${cfg.millora}%`],
+    [`Pla de Reducció · Objectiu: ${cfg.objectiu}% en ${cfg.anysPla} any${cfg.anysPla !== 1 ? 's' : ''}`],
+    [`Any d'inici: ${cfg.any}  ·  Any final: ${cfg.any + cfg.anysPla - 1}  ·  Millora ja aplicada: ${cfg.millora}%`],
     [],
-    ['INDICADOR','VALOR ACTUAL','OBJECTIU','REDUCCIÓ','ESTALVI'],
+    ['INDICADOR','VALOR ACTUAL',`OBJECTIU (−${cfg.objectiu}%)`,'REDUCCIÓ','ESTALVI ESTIMAT'],
   ];
-  if (elec) milloraData.push(['Electricitat (kWh)', elec, parseFloat((elec*(1-pct)).toFixed(1)), parseFloat((elec*pct).toFixed(1)), fmt(elec*pct*0.18)+' €']);
-  if (aig)  milloraData.push(['Aigua (m³)', aig, parseFloat((aig*(1-pct)).toFixed(1)), parseFloat((aig*pct).toFixed(1)), fmt(aig*pct*2.5)+' €']);
-  if (con)  milloraData.push(['Consumibles (€)', con, parseFloat((con*(1-pct)).toFixed(1)), parseFloat((con*pct).toFixed(1)), fmt(con*pct)+' €']);
-  if (net)  milloraData.push(['Neteja (€)', net, parseFloat((net*(1-pct)).toFixed(1)), parseFloat((net*pct).toFixed(1)), fmt(net*pct)+' €']);
+  if (elec) milloraData.push(['Electricitat (kWh)', elec, parseFloat((elec*(1-objPct)).toFixed(1)), parseFloat((elec*objPct).toFixed(1)), fmt(elec*objPct*0.18)+' €']);
+  if (aig)  milloraData.push(['Aigua (m³)', aig, parseFloat((aig*(1-objPct)).toFixed(1)), parseFloat((aig*objPct).toFixed(1)), fmt(aig*objPct*2.5)+' €']);
+  if (con)  milloraData.push(['Consumibles (€)', con, parseFloat((con*(1-objPct)).toFixed(1)), parseFloat((con*objPct).toFixed(1)), fmt(con*objPct)+' €']);
+  if (net)  milloraData.push(['Neteja (€)', net, parseFloat((net*(1-objPct)).toFixed(1)), parseFloat((net*objPct).toFixed(1)), fmt(net*objPct)+' €']);
+
   milloraData.push([],['CRONOGRAMA']);
-  milloraData.push([`Any 1 (${cfg.any})`,   'Diagnosi i accions immediates','Objectiu: −10%']);
-  milloraData.push([`Any 2 (${cfg.any+1})`, 'Inversions i optimització',    'Objectiu: −20%']);
-  milloraData.push([`Any 3 (${cfg.any+2})`, 'Consolidació economia circular','Objectiu: −30%']);
+  const pctPerAny = cfg.objectiu / cfg.anysPla;
+  const PLANS_LABELS = ['Diagnosi i accions immediates','Inversions i optimització','Consolidació i economia circular','Seguiment i ampliació de millores','Lideratge i innovació sostenible'];
+  for (let i = 0; i < cfg.anysPla; i++) {
+    const pctAcum = Math.round(pctPerAny * (i+1));
+    const isLast  = i === cfg.anysPla - 1;
+    milloraData.push([
+      `Any ${i+1} (${cfg.any + i})`,
+      PLANS_LABELS[i % PLANS_LABELS.length],
+      isLast ? `Objectiu: −${cfg.objectiu}% ✓` : `Objectiu acumulat: −${pctAcum}%`
+    ]);
+  }
 
   const wsM = XLSX.utils.aoa_to_sheet(milloraData);
   wsM['!cols'] = [{wch:22},{wch:16},{wch:16},{wch:14},{wch:18}];

@@ -52,9 +52,9 @@
 
     <div class="glass-card config-card">
 
-      <!-- Grup 1: Centre -->
+      <!-- Grup 1: Centre i pla -->
       <div class="config-group">
-        <div class="config-group-label">🏫 Centre educatiu</div>
+        <div class="config-group-label">🏫 Centre i pla de millora</div>
         <div class="config-row">
 
           <div class="config-field">
@@ -63,16 +63,7 @@
               <span class="iico">👥</span>
               <input type="number" id="cfg-alumnes" value="350" min="1" class="input-field" oninput="syncConfig()" />
             </div>
-            <span class="fhint">Personal inclòs</span>
-          </div>
-
-          <div class="config-field">
-            <label>Any de projecció</label>
-            <div class="input-ico-wrap">
-              <span class="iico">📅</span>
-              <input type="number" id="cfg-any" value="2025" min="2024" max="2040" class="input-field" oninput="syncConfig()" />
-            </div>
-            <span class="fhint">Any de referència del càlcul</span>
+            <span class="fhint">Personal del centre inclòs</span>
           </div>
 
           <div class="config-field">
@@ -82,6 +73,15 @@
               <input type="number" id="cfg-millora" value="0" min="0" max="100" class="input-field" oninput="syncConfig(); syncSlider()" />
             </div>
             <span class="fhint">Reducció ja implementada</span>
+          </div>
+
+          <div class="config-field">
+            <label>Objectiu de reducció (%)</label>
+            <div class="input-ico-wrap">
+              <span class="iico">🎯</span>
+              <input type="number" id="cfg-objectiu" value="30" min="1" max="100" class="input-field" oninput="syncConfig()" />
+            </div>
+            <span class="fhint">% total a assolir al final del pla</span>
           </div>
 
         </div>
@@ -97,12 +97,15 @@
 
       <!-- Grup 2: Període -->
       <div class="config-group">
-        <div class="config-group-label">🗓️ Període d'anàlisi</div>
+        <div class="config-group-label">🗓️ Període d'anàlisi del pla</div>
+        <div class="config-hint-box">
+          💡 Defineix l'inici i el final del pla. Els <strong>anys de durada</strong> es calculen automàticament.
+        </div>
         <div class="config-row">
 
           <div class="config-field">
             <label>Mes d'inici</label>
-            <select id="cfg-ini" class="input-field" onchange="syncConfig()">
+            <select id="cfg-mes-ini" class="input-field" onchange="syncConfig()">
               <option value="0">Gener</option><option value="1">Febrer</option>
               <option value="2">Març</option><option value="3">Abril</option>
               <option value="4">Maig</option><option value="5">Juny</option>
@@ -110,12 +113,21 @@
               <option value="8" selected>Setembre</option><option value="9">Octubre</option>
               <option value="10">Novembre</option><option value="11">Desembre</option>
             </select>
-            <span class="fhint">Primer mes del període</span>
+            <span class="fhint">Mes en que comença el pla</span>
+          </div>
+
+          <div class="config-field">
+            <label>Any d'inici</label>
+            <div class="input-ico-wrap">
+              <span class="iico">📅</span>
+              <input type="number" id="cfg-any-ini" value="2025" min="2020" max="2040" class="input-field" oninput="syncConfig()" />
+            </div>
+            <span class="fhint">Any de referència del càlcul</span>
           </div>
 
           <div class="config-field">
             <label>Mes de fi</label>
-            <select id="cfg-fi" class="input-field" onchange="syncConfig()">
+            <select id="cfg-mes-fi" class="input-field" onchange="syncConfig()">
               <option value="0">Gener</option><option value="1">Febrer</option>
               <option value="2">Març</option><option value="3">Abril</option>
               <option value="4">Maig</option><option value="5" selected>Juny</option>
@@ -123,27 +135,58 @@
               <option value="8">Setembre</option><option value="9">Octubre</option>
               <option value="10">Novembre</option><option value="11">Desembre</option>
             </select>
-            <span class="fhint">Últim mes del període</span>
+            <span class="fhint">Mes en que acaba el pla</span>
           </div>
 
           <div class="config-field">
-            <label>Mode de càlcul</label>
+            <label>Any de fi</label>
+            <div class="input-ico-wrap">
+              <span class="iico">🏁</span>
+              <input type="number" id="cfg-any-fi" value="2027" min="2020" max="2050" class="input-field" oninput="syncConfig()" />
+            </div>
+            <span class="fhint">Any en que s'assoleix l'objectiu</span>
+          </div>
+
+          <div class="config-field">
+            <label>Mode de càlcul mensual</label>
             <div class="toggle-pair">
               <button class="tgl active" id="tgl-custom" onclick="setMode('custom')">Personalitzat</button>
-              <button class="tgl" id="tgl-any" onclick="setMode('any')">Any complet (12m)</button>
+              <button class="tgl" id="tgl-any" onclick="setMode('any')">Any complet</button>
             </div>
             <span class="fhint" id="periode-preview">Set → Jun · 10 mesos</span>
           </div>
 
+        </div>
+
+        <!-- Resum calculat automàticament -->
+        <div class="config-derived">
+          <div class="derived-item">
+            <span class="derived-icon">📆</span>
+            <span class="derived-label">Durada del pla</span>
+            <span class="derived-val" id="derived-anys">3 anys</span>
+          </div>
+          <div class="derived-sep">·</div>
+          <div class="derived-item">
+            <span class="derived-icon">🗓️</span>
+            <span class="derived-label">Mesos per càlcul</span>
+            <span class="derived-val" id="derived-mesos">10 mesos</span>
+          </div>
+          <div class="derived-sep">·</div>
+          <div class="derived-item">
+            <span class="derived-icon">📊</span>
+            <span class="derived-label">Reducció per any</span>
+            <span class="derived-val" id="derived-pct-any">10%/any</span>
+          </div>
         </div>
       </div>
 
       <!-- Resum actiu -->
       <div class="config-summary">
         <div class="cs-pill">👥 <strong id="cs-alumnes">350</strong> alumnes</div>
-        <div class="cs-pill">📅 Any <strong id="cs-any">2025</strong></div>
-        <div class="cs-pill">🗓️ <strong id="cs-periode">Set–Jun (10m)</strong></div>
+        <div class="cs-pill">📅 <strong id="cs-periode">Set 2025 – Jun 2027</strong></div>
+        <div class="cs-pill">📆 <strong id="cs-anys-pla">3 anys</strong></div>
         <div class="cs-pill">📉 Millora: <strong id="cs-millora">0%</strong></div>
+        <div class="cs-pill">🎯 Objectiu: <strong id="cs-objectiu">30%</strong></div>
       </div>
 
     </div>
@@ -260,7 +303,7 @@
   <section id="accions" class="section section-alt">
     <div class="section-header">
       <h2>Com Reduir el Consum</h2>
-      <p>Accions reals per reduir un <strong>30%</strong> l'impacte en 3 anys</p>
+      <p>Accions reals per reduir un <strong id="acc-objectiu">30%</strong> l'impacte en <strong id="acc-anys">3 anys</strong></p>
     </div>
 
     <div class="accions-grid">
@@ -332,6 +375,8 @@
       <p>Introdueix els consums anuals actuals. La millora aplicada prové de la <a href="#configuracio" class="link-cfg">Configuració Global</a>.</p>
       <div class="mejora-cfg-pill">
         📉 Millora configurada: <strong id="millora-pct-display">0%</strong>
+        &nbsp;·&nbsp; 🎯 Objectiu: <strong id="millora-obj-display">30%</strong>
+        &nbsp;·&nbsp; 📆 <strong id="millora-anys-display">3 anys</strong>
         &nbsp;·&nbsp; <a href="#configuracio" class="link-cfg">Modificar →</a>
       </div>
       <div class="mejora-inputs">
@@ -360,59 +405,17 @@
   <!-- ===================== CRONOGRAMA ===================== -->
   <section id="cronograma" class="section">
     <div class="section-header">
-      <h2>Cronograma 3 Anys</h2>
-      <p>Pla per assolir el −30% amb economia circular</p>
+      <h2 id="crono-title">Cronograma 3 Anys</h2>
+      <p>Pla per assolir el <strong id="crono-obj-sub">−30%</strong> amb economia circular</p>
     </div>
 
-    <div class="timeline">
-      <div class="timeline-item glass-card">
-        <div class="timeline-year">Any 1<br><small id="crono-y1">2025</small></div>
-        <div class="timeline-content">
-          <h4>🔍 Diagnosi i accions immediates</h4>
-          <ul>
-            <li>Auditoria energètica completa del centre</li>
-            <li>Substitució il·luminació per LED (−15% elec.)</li>
-            <li>Instal·lació sensors de presència</li>
-            <li>Campanya conscienciació + protocol estalvi d'aigua</li>
-            <li>Digitalització de tràmits interns (−20% paper)</li>
-          </ul>
-          <div class="timeline-kpi"><span class="badge badge-blue">Objectiu: −10% global</span></div>
-        </div>
-      </div>
-      <div class="timeline-item glass-card">
-        <div class="timeline-year">Any 2<br><small id="crono-y2">2026</small></div>
-        <div class="timeline-content">
-          <h4>⚙️ Inversions i optimització</h4>
-          <ul>
-            <li>Instal·lació plaques fotovoltaiques (−20% elec.)</li>
-            <li>Airejadors i reducció de cabal (−15% aigua)</li>
-            <li>Substitució productes neteja per ecològics</li>
-            <li>Plataforma digital per lliurament de tasques</li>
-            <li>Recollida d'aigua pluvial per a reg</li>
-          </ul>
-          <div class="timeline-kpi"><span class="badge badge-blue">Objectiu: −20% global</span></div>
-        </div>
-      </div>
-      <div class="timeline-item glass-card">
-        <div class="timeline-year">Any 3<br><small id="crono-y3">2027</small></div>
-        <div class="timeline-content">
-          <h4>✅ Consolidació i economia circular</h4>
-          <ul>
-            <li>Revisió i ajust del pla de millora</li>
-            <li>Compra centralitzada i reducció d'embalatges</li>
-            <li>Implementació sistema de gestió ISO 14001</li>
-            <li>Reutilització i valorització de residus interns</li>
-            <li>Publicació de la memòria de sostenibilitat</li>
-          </ul>
-          <div class="timeline-kpi"><span class="badge badge-green">Objectiu: −30% global ✓</span></div>
-        </div>
-      </div>
-    </div>
+    <!-- Timeline generada dinàmicament per JS -->
+    <div class="timeline" id="timeline-container"></div>
 
     <div class="kpi-grid">
       <div class="glass-card kpi-card">
-        <div class="kpi-num">−30%</div>
-        <div class="kpi-label">Impacte total en 3 anys</div>
+        <div class="kpi-num" id="kpi-obj">−30%</div>
+        <div class="kpi-label" id="kpi-obj-label">Impacte total en 3 anys</div>
       </div>
       <div class="glass-card kpi-card">
         <div class="kpi-num">+3.430€</div>
