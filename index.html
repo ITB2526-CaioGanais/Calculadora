@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoCalc · Calculadora Energètica</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+  <div class="bg-blob b3"></div>
+
+  <!-- NAV -->
+  <nav class="glass-nav">
+    <div class="nav-inner">
+      <div class="logo">
+        <span class="logo-icon">🌿</span>
+        <span class="logo-text">EcoCalc</span>
+      </div>
+      <div class="nav-links">
+        <a href="#configuracio" class="nav-link">Configuració</a>
+        <a href="#calculadora" class="nav-link">Calculadora</a>
+        <a href="#accions" class="nav-link">Accions</a>
+        <a href="#cronograma" class="nav-link">Cronograma</a>
+        <a href="#exportar" class="nav-link">Exportar</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+      <p class="hero-tag">Fase 3 · Anàlisi Energètica</p>
+      <h1>Calculadora<br><span class="gradient-text">Energètica</span></h1>
+      <p class="hero-sub">Preveu, analitza i redueix el consum del teu centre educatiu</p>
+      <a href="#configuracio" class="btn-primary">Comença ara →</a>
+    </div>
+  </header>
+
+  <!-- ===================== CONFIGURACIÓ GLOBAL ===================== -->
+  <section id="configuracio" class="section">
+    <div class="section-header">
+      <h2>⚙️ Configuració Global</h2>
+      <p>Aquests paràmetres s'apliquen a <strong>tots els indicadors</strong> automàticament</p>
+    </div>
+
+    <div class="glass-card config-card">
+
+      <!-- Grup 1: Centre -->
+      <div class="config-group">
+        <div class="config-group-label">🏫 Centre educatiu</div>
+        <div class="config-row">
+
+          <div class="config-field">
+            <label>Nombre d'alumnes / personal</label>
+            <div class="input-ico-wrap">
+              <span class="iico">👥</span>
+              <input type="number" id="cfg-alumnes" value="350" min="1" class="input-field" oninput="syncConfig()" />
+            </div>
+            <span class="fhint">Personal inclòs</span>
+          </div>
+
+          <div class="config-field">
+            <label>Any de projecció</label>
+            <div class="input-ico-wrap">
+              <span class="iico">📅</span>
+              <input type="number" id="cfg-any" value="2025" min="2024" max="2040" class="input-field" oninput="syncConfig()" />
+            </div>
+            <span class="fhint">Any de referència del càlcul</span>
+          </div>
+
+          <div class="config-field">
+            <label>Millora aplicada (%)</label>
+            <div class="input-ico-wrap">
+              <span class="iico">📉</span>
+              <input type="number" id="cfg-millora" value="0" min="0" max="100" class="input-field" oninput="syncConfig(); syncSlider()" />
+            </div>
+            <span class="fhint">Reducció ja implementada</span>
+          </div>
+
+        </div>
+
+        <!-- Slider millora -->
+        <div class="slider-row">
+          <span class="slabel">0%</span>
+          <input type="range" id="cfg-slider" min="0" max="100" value="0" class="aero-slider" oninput="syncFromSlider()" />
+          <span class="slabel">100%</span>
+          <span class="slider-bubble" id="slider-bubble">0%</span>
+        </div>
+      </div>
+
+      <!-- Grup 2: Període -->
+      <div class="config-group">
+        <div class="config-group-label">🗓️ Període d'anàlisi</div>
+        <div class="config-row">
+
+          <div class="config-field">
+            <label>Mes d'inici</label>
+            <select id="cfg-ini" class="input-field" onchange="syncConfig()">
+              <option value="0">Gener</option><option value="1">Febrer</option>
+              <option value="2">Març</option><option value="3">Abril</option>
+              <option value="4">Maig</option><option value="5">Juny</option>
+              <option value="6">Juliol</option><option value="7">Agost</option>
+              <option value="8" selected>Setembre</option><option value="9">Octubre</option>
+              <option value="10">Novembre</option><option value="11">Desembre</option>
+            </select>
+            <span class="fhint">Primer mes del període</span>
+          </div>
+
+          <div class="config-field">
+            <label>Mes de fi</label>
+            <select id="cfg-fi" class="input-field" onchange="syncConfig()">
+              <option value="0">Gener</option><option value="1">Febrer</option>
+              <option value="2">Març</option><option value="3">Abril</option>
+              <option value="4">Maig</option><option value="5" selected>Juny</option>
+              <option value="6">Juliol</option><option value="7">Agost</option>
+              <option value="8">Setembre</option><option value="9">Octubre</option>
+              <option value="10">Novembre</option><option value="11">Desembre</option>
+            </select>
+            <span class="fhint">Últim mes del període</span>
+          </div>
+
+          <div class="config-field">
+            <label>Mode de càlcul</label>
+            <div class="toggle-pair">
+              <button class="tgl active" id="tgl-custom" onclick="setMode('custom')">Personalitzat</button>
+              <button class="tgl" id="tgl-any" onclick="setMode('any')">Any complet (12m)</button>
+            </div>
+            <span class="fhint" id="periode-preview">Set → Jun · 10 mesos</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Resum actiu -->
+      <div class="config-summary">
+        <div class="cs-pill">👥 <strong id="cs-alumnes">350</strong> alumnes</div>
+        <div class="cs-pill">📅 Any <strong id="cs-any">2025</strong></div>
+        <div class="cs-pill">🗓️ <strong id="cs-periode">Set–Jun (10m)</strong></div>
+        <div class="cs-pill">📉 Millora: <strong id="cs-millora">0%</strong></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== CALCULADORA ===================== -->
+  <section id="calculadora" class="section">
+    <div class="section-header">
+      <h2>Calculadora de Consum</h2>
+      <p>Introdueix el consum mensual base de cada indicador</p>
+    </div>
+
+    <div class="tabs glass-card">
+      <button class="tab active" data-tab="electricitat">⚡ Electricitat</button>
+      <button class="tab" data-tab="aigua">💧 Aigua</button>
+      <button class="tab" data-tab="consumibles">📄 Consumibles</button>
+      <button class="tab" data-tab="neteja">🧹 Neteja</button>
+    </div>
+
+    <!-- ELECTRICITAT -->
+    <div class="tab-content active" id="tab-electricitat">
+      <div class="calc-grid">
+        <div class="glass-card input-card">
+          <h3>⚡ Consum Elèctric</h3>
+          <div class="cfg-badge">Configuració global aplicada ↑</div>
+          <label>Consum mensual base (kWh)</label>
+          <input type="number" id="elec-mensual" value="2500" class="input-field" />
+          <label>Factor de creixement anual (%)</label>
+          <input type="number" id="elec-creixement" value="2" step="0.1" class="input-field" />
+          <button class="btn-calc" onclick="calcular('electricitat')">Calcular ⚡</button>
+        </div>
+        <div class="glass-card result-card" id="result-electricitat">
+          <div class="result-placeholder"><span class="result-icon">⚡</span><p>Els resultats apareixeran aquí</p></div>
+        </div>
+      </div>
+      <div class="glass-card seasonal-card">
+        <h4>📊 Distribució estacional prevista</h4>
+        <div class="bar-chart" id="chart-electricitat"></div>
+      </div>
+    </div>
+
+    <!-- AIGUA -->
+    <div class="tab-content" id="tab-aigua">
+      <div class="calc-grid">
+        <div class="glass-card input-card">
+          <h3>💧 Consum d'Aigua</h3>
+          <div class="cfg-badge">Configuració global aplicada ↑</div>
+          <label>Consum mensual base (m³)</label>
+          <input type="number" id="aigua-mensual" value="180" class="input-field" />
+          <label>Factor de creixement anual (%)</label>
+          <input type="number" id="aigua-creixement" value="1.5" step="0.1" class="input-field" />
+          <button class="btn-calc" onclick="calcular('aigua')">Calcular 💧</button>
+        </div>
+        <div class="glass-card result-card" id="result-aigua">
+          <div class="result-placeholder"><span class="result-icon">💧</span><p>Els resultats apareixeran aquí</p></div>
+        </div>
+      </div>
+      <div class="glass-card seasonal-card">
+        <h4>📊 Distribució estacional prevista</h4>
+        <div class="bar-chart" id="chart-aigua"></div>
+      </div>
+    </div>
+
+    <!-- CONSUMIBLES -->
+    <div class="tab-content" id="tab-consumibles">
+      <div class="calc-grid">
+        <div class="glass-card input-card">
+          <h3>📄 Consumibles d'Oficina</h3>
+          <div class="cfg-badge">Configuració global aplicada ↑</div>
+          <label>Despesa mensual base (€)</label>
+          <input type="number" id="cons-mensual" value="320" class="input-field" />
+          <label>Resmes de paper mensuals</label>
+          <input type="number" id="cons-paper" value="40" class="input-field" />
+          <label>Factor de creixement anual (%)</label>
+          <input type="number" id="cons-creixement" value="1" step="0.1" class="input-field" />
+          <button class="btn-calc" onclick="calcular('consumibles')">Calcular 📄</button>
+        </div>
+        <div class="glass-card result-card" id="result-consumibles">
+          <div class="result-placeholder"><span class="result-icon">📄</span><p>Els resultats apareixeran aquí</p></div>
+        </div>
+      </div>
+      <div class="glass-card seasonal-card">
+        <h4>📊 Distribució estacional prevista</h4>
+        <div class="bar-chart" id="chart-consumibles"></div>
+      </div>
+    </div>
+
+    <!-- NETEJA -->
+    <div class="tab-content" id="tab-neteja">
+      <div class="calc-grid">
+        <div class="glass-card input-card">
+          <h3>🧹 Productes de Neteja</h3>
+          <div class="cfg-badge">Configuració global aplicada ↑</div>
+          <label>Despesa mensual base (€)</label>
+          <input type="number" id="neteja-mensual" value="210" class="input-field" />
+          <label>Litres de producte mensuals</label>
+          <input type="number" id="neteja-litres" value="85" class="input-field" />
+          <label>Factor de creixement anual (%)</label>
+          <input type="number" id="neteja-creixement" value="1.2" step="0.1" class="input-field" />
+          <button class="btn-calc" onclick="calcular('neteja')">Calcular 🧹</button>
+        </div>
+        <div class="glass-card result-card" id="result-neteja">
+          <div class="result-placeholder"><span class="result-icon">🧹</span><p>Els resultats apareixeran aquí</p></div>
+        </div>
+      </div>
+      <div class="glass-card seasonal-card">
+        <h4>📊 Distribució estacional prevista</h4>
+        <div class="bar-chart" id="chart-neteja"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ACCIONS ===================== -->
+  <section id="accions" class="section section-alt">
+    <div class="section-header">
+      <h2>Com Reduir el Consum</h2>
+      <p>Accions reals per reduir un <strong>30%</strong> l'impacte en 3 anys</p>
+    </div>
+
+    <div class="accions-grid">
+      <div class="glass-card accio-card">
+        <div class="accio-icon">⚡</div>
+        <h3>Electricitat</h3>
+        <ul class="accio-list">
+          <li>🌞 Plaques solars fotovoltaiques a la teulada</li>
+          <li>💡 Il·luminació LED de baix consum</li>
+          <li>⏱️ Sensors de presència a aules i lavabos</li>
+          <li>🌡️ Termòstats intel·ligents (22°C/26°C)</li>
+          <li>🔌 Apagar equipament fora d'horari lectiu</li>
+        </ul>
+        <div class="accio-meta">
+          <span class="badge badge-green">−35% elec.</span>
+          <span class="badge badge-blue">~1.400€/any</span>
+        </div>
+      </div>
+      <div class="glass-card accio-card">
+        <div class="accio-icon">💧</div>
+        <h3>Aigua</h3>
+        <ul class="accio-list">
+          <li>🚿 Airejadors i reductors de cabal</li>
+          <li>🌧️ Recollir aigua de pluja per al reg</li>
+          <li>🔍 Auditoria de fuites i reparació</li>
+          <li>📚 Campanyes internes de conscienciació</li>
+          <li>🌱 Vegetació de baix consum hídric</li>
+        </ul>
+        <div class="accio-meta">
+          <span class="badge badge-green">−30% aigua</span>
+          <span class="badge badge-blue">~650€/any</span>
+        </div>
+      </div>
+      <div class="glass-card accio-card">
+        <div class="accio-icon">📄</div>
+        <h3>Consumibles</h3>
+        <ul class="accio-list">
+          <li>📱 Digitalitzar documents i circulars</li>
+          <li>🖨️ Imprimir en duplex i b/n per defecte</li>
+          <li>♻️ Paper reciclat certificat FSC</li>
+          <li>💻 Plataforma digital per als deures</li>
+          <li>📦 Compra centralitzada, menys embalatge</li>
+        </ul>
+        <div class="accio-meta">
+          <span class="badge badge-green">−40% paper</span>
+          <span class="badge badge-blue">~900€/any</span>
+        </div>
+      </div>
+      <div class="glass-card accio-card">
+        <div class="accio-icon">🧹</div>
+        <h3>Productes de Neteja</h3>
+        <ul class="accio-list">
+          <li>🌿 Productes ecològics concentrats</li>
+          <li>🧴 Dosificadors per evitar malbaratament</li>
+          <li>📋 Protocols eficients per zones</li>
+          <li>🔄 Microfibres reutilitzables</li>
+          <li>🏷️ Certificació Ecolabel EU</li>
+        </ul>
+        <div class="accio-meta">
+          <span class="badge badge-green">−25% neteja</span>
+          <span class="badge badge-blue">~480€/any</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculadora d'impacte -->
+    <div class="glass-card mejora-calc">
+      <h3>🎯 Impacte de les Millores</h3>
+      <p>Introdueix els consums anuals actuals. La millora aplicada prové de la <a href="#configuracio" class="link-cfg">Configuració Global</a>.</p>
+      <div class="mejora-cfg-pill">
+        📉 Millora configurada: <strong id="millora-pct-display">0%</strong>
+        &nbsp;·&nbsp; <a href="#configuracio" class="link-cfg">Modificar →</a>
+      </div>
+      <div class="mejora-inputs">
+        <div class="mejora-field">
+          <label>Electricitat anual (kWh)</label>
+          <input type="number" id="m-elec" value="30000" class="input-field" />
+        </div>
+        <div class="mejora-field">
+          <label>Aigua anual (m³)</label>
+          <input type="number" id="m-aigua" value="2160" class="input-field" />
+        </div>
+        <div class="mejora-field">
+          <label>Consumibles anuals (€)</label>
+          <input type="number" id="m-cons" value="3840" class="input-field" />
+        </div>
+        <div class="mejora-field">
+          <label>Neteja anual (€)</label>
+          <input type="number" id="m-neteja" value="2520" class="input-field" />
+        </div>
+      </div>
+      <button class="btn-primary" onclick="calcularMillora()">Calcula l'impacte →</button>
+      <div id="result-millora" class="millora-result hidden"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CRONOGRAMA ===================== -->
+  <section id="cronograma" class="section">
+    <div class="section-header">
+      <h2>Cronograma 3 Anys</h2>
+      <p>Pla per assolir el −30% amb economia circular</p>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item glass-card">
+        <div class="timeline-year">Any 1<br><small id="crono-y1">2025</small></div>
+        <div class="timeline-content">
+          <h4>🔍 Diagnosi i accions immediates</h4>
+          <ul>
+            <li>Auditoria energètica completa del centre</li>
+            <li>Substitució il·luminació per LED (−15% elec.)</li>
+            <li>Instal·lació sensors de presència</li>
+            <li>Campanya conscienciació + protocol estalvi d'aigua</li>
+            <li>Digitalització de tràmits interns (−20% paper)</li>
+          </ul>
+          <div class="timeline-kpi"><span class="badge badge-blue">Objectiu: −10% global</span></div>
+        </div>
+      </div>
+      <div class="timeline-item glass-card">
+        <div class="timeline-year">Any 2<br><small id="crono-y2">2026</small></div>
+        <div class="timeline-content">
+          <h4>⚙️ Inversions i optimització</h4>
+          <ul>
+            <li>Instal·lació plaques fotovoltaiques (−20% elec.)</li>
+            <li>Airejadors i reducció de cabal (−15% aigua)</li>
+            <li>Substitució productes neteja per ecològics</li>
+            <li>Plataforma digital per lliurament de tasques</li>
+            <li>Recollida d'aigua pluvial per a reg</li>
+          </ul>
+          <div class="timeline-kpi"><span class="badge badge-blue">Objectiu: −20% global</span></div>
+        </div>
+      </div>
+      <div class="timeline-item glass-card">
+        <div class="timeline-year">Any 3<br><small id="crono-y3">2027</small></div>
+        <div class="timeline-content">
+          <h4>✅ Consolidació i economia circular</h4>
+          <ul>
+            <li>Revisió i ajust del pla de millora</li>
+            <li>Compra centralitzada i reducció d'embalatges</li>
+            <li>Implementació sistema de gestió ISO 14001</li>
+            <li>Reutilització i valorització de residus interns</li>
+            <li>Publicació de la memòria de sostenibilitat</li>
+          </ul>
+          <div class="timeline-kpi"><span class="badge badge-green">Objectiu: −30% global ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="glass-card kpi-card">
+        <div class="kpi-num">−30%</div>
+        <div class="kpi-label">Impacte total en 3 anys</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-num">+3.430€</div>
+        <div class="kpi-label">Estalvi econòmic anual</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-num">−9 t</div>
+        <div class="kpi-label">CO₂ evitat per any</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-num" id="kpi-any-final">2027</div>
+        <div class="kpi-label">Any d'assoliment dels objectius</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EXPORTAR ===================== -->
+  <section id="exportar" class="section export-section">
+    <div class="glass-card export-card">
+      <div class="export-header">
+        <div>
+          <h3>📤 Exportar Resultats</h3>
+          <p>Calcula almenys un indicador abans d'exportar</p>
+        </div>
+        <div class="export-status">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Cap càlcul realitzat</span>
+        </div>
+      </div>
+      <div class="export-buttons">
+        <button class="btn-export btn-pdf" onclick="exportarPDF()">
+          <span class="export-icon">📄</span>
+          <span class="export-label">Exportar PDF</span>
+          <span class="export-sub">Informe complet</span>
+        </button>
+        <button class="btn-export btn-excel" onclick="exportarExcel()">
+          <span class="export-icon">📊</span>
+          <span class="export-label">Exportar Excel</span>
+          <span class="export-sub">Dades mensuals</span>
+        </button>
+      </div>
+      <p class="export-hint">💡 L'Excel inclou totes les pestanyes per indicador amb la configuració global aplicada</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>🌿 EcoCalc · Projecte de Sostenibilitat Educativa · Fase 3</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
